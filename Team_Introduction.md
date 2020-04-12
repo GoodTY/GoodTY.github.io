@@ -1,12 +1,11 @@
-Hi,
-
+Hi,  
 My name is TAEKYUN kIM.  
 My github username is GoodTY.  
 I develop with 3 team members.  
 My profile site is GoodTY.github.  
 Now, I'm going to introduce my team.  
 
-JUNHEOK_LEE
+JUNHEOK_LEE  
 github_username = bnbong  
 profile_site = bnbong.github.io  
 
