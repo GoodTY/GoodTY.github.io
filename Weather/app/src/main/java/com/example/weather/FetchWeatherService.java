@@ -26,12 +26,12 @@ import java.util.ArrayList;
 public class FetchWeatherService extends Service {
     public static final String ACTION_RETRIEVE_WEATHER_DATA = "com.loyid.weatherforecast.RETRIEVE_DATA";
     public static final String EXTRA_WEATHER_DATA = "weather-data";
-
     public FetchWeatherService() {
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+
         String action = intent.getAction();
         if (action.equals(ACTION_RETRIEVE_WEATHER_DATA)) {
             retrieveWeatherData(startId);
@@ -56,7 +56,7 @@ public class FetchWeatherService extends Service {
         /* The date/time conversion code is going to be moved outside the asynctask later,
          * so for convenience we're breaking it out into its own method now.
          */
-        private String getReadableDateString(long time) {
+        private String getReadableDateString(long time){
             // Because the API returns a unix timestamp (measured in seconds),
             // it must be converted to milliseconds in order to be converted to valid date.
             SimpleDateFormat shortenedDateFormat = new SimpleDateFormat("EEE MMM dd");
@@ -78,7 +78,7 @@ public class FetchWeatherService extends Service {
         /**
          * Take the String representing the complete forecast in JSON Format and
          * pull out the data we need to construct the Strings needed for the wireframes.
-         * <p>
+         *
          * Fortunately parsing is easy:  constructor takes the JSON string and converts it
          * into an Object hierarchy for us.
          */
@@ -114,7 +114,7 @@ public class FetchWeatherService extends Service {
             dayTime = new Time();
 
             String[] resultStrs = new String[numDays];
-            for (int i = 0; i < weatherArray.length(); i++) {
+            for(int i = 0; i < weatherArray.length(); i++) {
                 // For now, using the format "Day, description, hi/low"
                 String day;
                 String description;
@@ -128,7 +128,7 @@ public class FetchWeatherService extends Service {
                 // "this saturday".
                 long dateTime;
                 // Cheating to convert this to UTC time, which is what we want anyhow
-                dateTime = dayTime.setJulianDay(julianStartDay + i);
+                dateTime = dayTime.setJulianDay(julianStartDay+i);
                 day = getReadableDateString(dateTime);
 
                 // description is in a child array called "weather", which is 1 element long.
@@ -190,6 +190,7 @@ public class FetchWeatherService extends Service {
                         .appendQueryParameter(UNITS_PARAM, units)
                         .appendQueryParameter(DAYS_PARAM, Integer.toString(numDays))
                         .appendQueryParameter(APPID_PARAM, "5fd2f2cde90c1533efb95b19c048a528")
+                        // 내 api키로 하면 안된다.. 왜지.?
                         .build();
 
                 URL url = new URL(builtUri.toString());
@@ -256,9 +257,12 @@ public class FetchWeatherService extends Service {
 
         @Override
         protected void onPostExecute(String[] result) {
-
+            if (result != null) {
+                notifyWeatherDataRetrieved(result);
+            }
             if (mStartId < 0)
                 return;
+
             stopSelf(mStartId);
         }
     }
@@ -277,7 +281,6 @@ public class FetchWeatherService extends Service {
         intent.putExtra(EXTRA_WEATHER_DATA, result);
         sendBroadcast(intent);
     }
-
     private void retrieveWeatherData(int startId) {
         FetchWeatherTask weatherTask = new FetchWeatherTask(startId);
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -286,7 +289,6 @@ public class FetchWeatherService extends Service {
     }
 
     private ArrayList<IFetchDataListener> mListeners = new ArrayList<IFetchDataListener>();
-
     private void registerFetchDataListener(IFetchDataListener listener) {
         synchronized (mListeners) {
             if (mListeners.contains(listener)) {
@@ -313,14 +315,17 @@ public class FetchWeatherService extends Service {
             mService = new WeakReference<FetchWeatherService>(service);
         }
 
+        @Override
         public void retrieveWeatherData() throws RemoteException {
             mService.get().retrieveWeatherData(-1);
         }
 
+        @Override
         public void registerFetchDataListener(IFetchDataListener listener) throws RemoteException {
             mService.get().registerFetchDataListener(listener);
         }
 
+        @Override
         public void unregisterFetchDataListener(IFetchDataListener listener) throws RemoteException {
             mService.get().unregisterFetchDataListener(listener);
         }

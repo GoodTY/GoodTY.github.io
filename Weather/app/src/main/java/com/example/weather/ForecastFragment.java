@@ -1,10 +1,14 @@
 package com.example.weather;
 
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.IntentFilter;
 import android.content.Context;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
+import android.os.IBinder;
+import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.content.Intent;
@@ -41,11 +45,11 @@ import java.text.SimpleDateFormat;
  * A simple {@link Fragment} subclass.
  */
 public class ForecastFragment extends Fragment {
-    public static final String ACTION_RETRIEVE_WEATHER_DATA = "com.example.weather.RETRIEVE_DATA";
 
     private ArrayList<String> sample_data;
     private ArrayAdapter<String> listViewAddapter;
     private ArrayAdapter<String> mForecastAdapter;
+    private IFetchWeatherService mService;
 
     private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -60,14 +64,55 @@ public class ForecastFragment extends Fragment {
             }
         }
     };
+    private ServiceConnection mServiceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            mService = IFetchWeatherService.Stub.asInterface(service);
 
-    public ForecastFragment newInstance() {
-        return new ForecastFragment();
-    }
+            try {
+                mService.registerFetchDataListener(mFetchDataListener);
+            } catch (RemoteException ex) {
+                ex.printStackTrace();
+            }
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            mService = null;
+        }
+    };
+
+    private IFetchDataListener.Stub mFetchDataListener = new IFetchDataListener.Stub() {
+        @Override
+        public void onWeatherDataRetrieved(String[] data) throws RemoteException {
+            mForecastAdapter.clear();
+            for(String dayForecastStr : data) {
+                mForecastAdapter.add(dayForecastStr);
+            }
+        }
+    };
+
+    public ForecastFragment() { }
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+
+        getActivity().bindService(new Intent(getActivity(), FetchWeatherService.class), mServiceConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    @Override
+    public void onDestroy() {
+        if (mService != null) {
+            try {
+                mService.unregisterFetchDataListener(mFetchDataListener);
+            } catch (RemoteException ex) {
+                ex.printStackTrace();
+            }
+        }
+        getActivity().unbindService(mServiceConnection);
+        super.onDestroy();
     }
 
     @Override
@@ -87,9 +132,17 @@ public class ForecastFragment extends Fragment {
     }
 
     private void refreshWeatherData() {
-        Intent intent = new Intent(getActivity(), FetchWeatherService.class);
+        /*Intent intent = new Intent(getActivity(), FetchWeatherService.class);
         intent.setAction(FetchWeatherService.ACTION_RETRIEVE_WEATHER_DATA);
         getActivity().startService(intent);
+        */
+        if (mService != null) {
+            try {
+                mService.retrieveWeatherData();
+            } catch (RemoteException ex) {
+                ex.printStackTrace();
+            }
+        }
     }
 
     @Override
@@ -108,6 +161,9 @@ public class ForecastFragment extends Fragment {
 
         List<String> weekForecast = new ArrayList<String>(Arrays.asList(data));
 
+        // Now that we have some dummy forecast data, create an ArrayAdapter.
+        // The ArrayAdapter will take data from a source (like our dummy forecast) and
+        // use it to populate the ListView it's attached to.
         mForecastAdapter =
                 new ArrayAdapter<String>(
                         getActivity(), // The current context (this activity)
@@ -118,7 +174,8 @@ public class ForecastFragment extends Fragment {
         // Inflate the layout for this fragment
         View rootView = inflater.inflate(R.layout.forecast_fragment, container, false);
 
-        ListView listView = (ListView) rootView.findViewById(R.id.listview_forecast);
+        // Get a reference to the ListView, and attach this adapter to it.
+        ListView listView = rootView.findViewById(R.id.listview_forecast);
         listView.setAdapter(mForecastAdapter);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -128,14 +185,15 @@ public class ForecastFragment extends Fragment {
                 Intent intent = new Intent(getActivity(), DetailActivity.class);
                 intent.putExtra("data", forecast);
             }
-
         });
-        IntentFilter intentFilter = new IntentFilter(FetchWeatherService.ACTION_RETRIEVE_WEATHER_DATA);
-        getActivity().registerReceiver(mBroadcastReceiver, intentFilter);
+        //IntentFilter intentFilter = new IntentFilter(FetchWeatherService.ACTION_RETRIEVE_WEATHER_DATA);
+        //getActivity().registerReceiver(mBroadcastReceiver, intentFilter);
         return rootView;
     }
-public void onDestroyView() {
-        getActivity().unregisterReceiver(mBroadcastReceiver);
+
+    @Override
+    public void onDestroyView() {
+        //getActivity().unregisterReceiver(mBroadcastReceiver);
         super.onDestroyView();
     }
 }
