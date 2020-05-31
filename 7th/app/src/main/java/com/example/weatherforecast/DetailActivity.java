@@ -1,6 +1,6 @@
-package com.example.weather;
+package com.example.weatherforecast;
 
-import android.support.v7.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 
 public class DetailActivity extends AppCompatActivity {
@@ -8,7 +8,7 @@ public class DetailActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_detail);
+        setContentView(R.layout.fragment_detail_activity);
 
         if (savedInstanceState == null) {
             DetailFragment fragment = new DetailFragment();
@@ -24,7 +24,5 @@ public class DetailActivity extends AppCompatActivity {
                     .add(R.id.detail_container, fragment)
                     .commit();
         }
-
-        //getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 }

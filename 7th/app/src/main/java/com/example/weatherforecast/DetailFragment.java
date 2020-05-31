@@ -1,11 +1,12 @@
-package com.example.weather;
+package com.example.weatherforecast;
 
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
+import androidx.fragment.app.Fragment;
 
 
 /**
@@ -31,10 +32,9 @@ public class DetailFragment extends Fragment {
         // Inflate the layout for this fragment
         View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
 
-        TextView detailTextView = (TextView)rootView.findViewById(R.id.list_item_forecast_textview);
+        TextView detailTextView = (TextView)rootView.findViewById(R.id.fragment_detail);
         detailTextView.setText(detailData);
 
         return rootView;
     }
-
 }
