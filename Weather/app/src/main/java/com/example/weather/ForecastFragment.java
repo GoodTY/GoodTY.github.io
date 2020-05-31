@@ -62,17 +62,17 @@ public class ForecastFragment extends Fragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.action_refresh) {
-            FetchWeatherTask weatherTask = new FetchWeatherTask();
-            weatherTask.execute();
+            refreshWeatherData();
             return true;
         }
 
         return super.onOptionsItemSelected(item);
     }
+
     private void refreshWeatherData() {
         FetchWeatherTask weatherTask = new FetchWeatherTask();
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        String cityId = preferences.getString("city", String.valueOf(1835847));
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        String cityId = prefs.getString("city", "1835847");
         weatherTask.execute(cityId);
     }
 
