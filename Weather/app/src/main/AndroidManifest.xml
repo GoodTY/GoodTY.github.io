@@ -23,11 +23,9 @@
             </intent-filter>
         </activity>
         <activity android:name=".DetailActivity" />
-
         <service
             android:name=".FetchWeatherService"
             android:enabled="true"
-            android:exported="true" />
+            android:exported="true"></service>
     </application>
-
 </manifest>
